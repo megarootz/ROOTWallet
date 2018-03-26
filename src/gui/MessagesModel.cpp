@@ -24,6 +24,7 @@ const int MESSAGES_MODEL_COLUMN_COUNT =
   MessagesModel::staticMetaObject.enumerator(MessagesModel::staticMetaObject.indexOfEnumerator("Columns")).keyCount();
 
 const QString MessagesModel::HEADER_REPLY_TO_KEY = "Reply-To";
+const QString MessagesModel::HEADER_ATTACHMENT = "Attachment";
 
 MessagesModel& MessagesModel::instance() {
   static MessagesModel inst;
@@ -182,6 +183,9 @@ QVariant MessagesModel::getDisplayRole(const QModelIndex& _index) const {
   case COLUMN_HAS_REPLY_TO:
     return !_index.data(ROLE_HEADER_REPLY_TO).toString().isEmpty();
 
+  case COLUMN_HAS_ATTACHMENT:
+    return !_index.data(ROLE_HEADER_ATTACHMENT).toString().isEmpty();
+
   default:
     break;
   }
@@ -222,6 +226,9 @@ QVariant MessagesModel::getUserRole(const QModelIndex& _index, int _role, Crypto
 
   case ROLE_HEADER_REPLY_TO:
     return _message.getHeaderValue(HEADER_REPLY_TO_KEY);
+
+  case ROLE_HEADER_ATTACHMENT:
+    return _message.getHeaderValue(HEADER_ATTACHMENT);
 
   case ROLE_HASH:
     return QByteArray(reinterpret_cast<char*>(&_transaction.hash), sizeof(_transaction.hash));

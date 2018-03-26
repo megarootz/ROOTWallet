@@ -7,17 +7,27 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QTemporaryFile>
 
+#include "NetworkProgressDialog.h"
 #include "MessageDetailsDialog.h"
 #include "MainWindow.h"
 #include "MessagesModel.h"
+#include "WalletEvents.h"
+#include "qzipreader_p.h"
 
 #include "ui_messagedetailsdialog.h"
 
 namespace WalletGui {
 
+Q_DECL_CONSTEXPR quint64 DOWNLOAD_BUFFER_SIZE = 100 * 1024 * 1024;
+
+const QString MessageDetailsDialog::IPFS_API_URL = "http://ipfs.ultranote.org:8080/ipfs/";
+
+
 MessageDetailsDialog::MessageDetailsDialog(const QModelIndex& _index, QWidget* _parent) : QDialog(_parent),
-  m_ui(new Ui::MessageDetailsDialog) {
+  m_ui(new Ui::MessageDetailsDialog),
+  attachmentDirectory(QDir::currentPath()) {
   m_ui->setupUi(this);
   QModelIndex modelIndex = MessagesModel::instance().index(_index.data(MessagesModel::ROLE_ROW).toInt(), 0);
   m_dataMapper.setModel(&MessagesModel::instance());
@@ -27,10 +37,13 @@ MessageDetailsDialog::MessageDetailsDialog(const QModelIndex& _index, QWidget* _
   m_dataMapper.addMapping(m_ui->m_sizeLabel, MessagesModel::COLUMN_MESSAGE_SIZE, "text");
   m_dataMapper.addMapping(m_ui->m_messageTextEdit, MessagesModel::COLUMN_FULL_MESSAGE, "plainText");
   m_dataMapper.addMapping(m_ui->m_replyButton, MessagesModel::COLUMN_HAS_REPLY_TO, "enabled");
+  m_dataMapper.addMapping(m_ui->m_downloadButton, MessagesModel::COLUMN_HAS_ATTACHMENT, "enabled");
   m_dataMapper.setCurrentModelIndex(modelIndex);
 
   m_ui->m_prevButton->setEnabled(m_dataMapper.currentIndex() > 0);
   m_ui->m_nextButton->setEnabled(m_dataMapper.currentIndex() < MessagesModel::instance().rowCount() - 1);
+
+  connect(&m_networAccesskManager, &QNetworkAccessManager::finished, this, &MessageDetailsDialog::attachmentDownloaded);
 }
 
 MessageDetailsDialog::~MessageDetailsDialog() {
@@ -72,6 +85,78 @@ void MessageDetailsDialog::saveClicked() {
     file.write(message.toUtf8());
     file.close();
   }
+}
+
+void MessageDetailsDialog::downloadClicked() {
+  attachmentDirectory = QFileDialog::getExistingDirectory(this, tr("Download attachments"), attachmentDirectory,
+                                                          QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+  if(attachmentDirectory.isEmpty()) {
+    return;
+  }
+
+  QString attachmentHeader = getCurrentMessageIndex().data(MessagesModel::ROLE_HEADER_ATTACHMENT).toString();
+  QNetworkReply* reply = m_networAccesskManager.get(QNetworkRequest(QUrl(IPFS_API_URL + attachmentHeader)));
+  reply->setReadBufferSize(DOWNLOAD_BUFFER_SIZE);
+  showUploadProgress(reply);
+}
+
+void MessageDetailsDialog::showUploadProgress(QNetworkReply* reply) {
+  NetworkProgressDialog* progressDialog = new NetworkProgressDialog(this, tr("Downloading attachment"));
+  connect(reply, &QNetworkReply::downloadProgress, progressDialog, &NetworkProgressDialog::networkProgress);
+  connect(progressDialog, &QProgressDialog::canceled, reply, &QNetworkReply::abort);
+  connect(reply, &QNetworkReply::finished, progressDialog, &NetworkProgressDialog::close);
+  progressDialog->show();
+}
+
+void MessageDetailsDialog::attachmentDownloaded(QNetworkReply* reply) {
+  reply->deleteLater();
+
+  if(reply->error() == QNetworkReply::OperationCanceledError) {
+    return;
+  }
+
+  if(reply->error()) {
+    QCoreApplication::postEvent(&MainWindow::instance(),
+                                new ShowMessageEvent(tr("Can't download attachment: ") + reply->errorString(),
+                                                     QtCriticalMsg));
+    return;
+  }
+
+  extractAttachment(reply->readAll());
+}
+
+void MessageDetailsDialog::extractAttachment(const QByteArray& data) {
+  QTemporaryFile tempFile;
+  if(!tempFile.open()) {
+      QCoreApplication::postEvent(&MainWindow::instance(),
+                                  new ShowMessageEvent(tr("Can't create temporary file for attachment"),
+                                                       QtCriticalMsg));
+      return;
+  }
+
+  tempFile.write(data);
+  tempFile.close();
+  tempFile.open();
+
+  QZipReader zipReader(&tempFile);
+  if(zipReader.status() != QZipReader::NoError) {
+      QCoreApplication::postEvent(&MainWindow::instance(),
+                                  new ShowMessageEvent(tr("Can't open attachment zip archive"), QtCriticalMsg));
+      return;
+  }
+
+  QString dir = attachmentDirectory + "/" + getCurrentMessageIndex().data(MessagesModel::ROLE_HASH).toByteArray().toHex().toUpper();
+  if(!QDir(dir).exists()) {
+      if(!QDir().mkdir(dir)) {
+          QCoreApplication::postEvent(&MainWindow::instance(),
+                                      new ShowMessageEvent(tr("Can't create attachment directory"),
+                                                           QtCriticalMsg));
+          return;
+      }
+  }
+
+  zipReader.extractAll(dir);
+  zipReader.close();
 }
 
 }

@@ -344,10 +344,13 @@ add_library(${CRYPTONOTE_LIB} STATIC ${CRYPTONOTE_SOURCES})
 set_target_properties(${CRYPTONOTE_LIB} PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 target_link_libraries(${CRYPTONOTE_LIB} ${Boost_LIBRARIES})
 
+# zlib
+add_subdirectory(zlib EXCLUDE_FROM_ALL)
+
 # Build UltraNote app
 add_executable(${PROJECT_NAME} ${BUILD_PLATFORM} ${BUILD_RESOURCES} ${SOURCES} ${HEADERS} ${QRC})
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${QTMAIN} ${CRYPTONOTE_LIB} ${QRENCODE_LIB} Qt5::Gui Qt5::Widgets Qt5::Network)
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${QTMAIN} zlibstatic ${CRYPTONOTE_LIB} ${QRENCODE_LIB} Qt5::Gui Qt5::Widgets Qt5::Network)
 
 # Platform-dependent properties
 if (APPLE)

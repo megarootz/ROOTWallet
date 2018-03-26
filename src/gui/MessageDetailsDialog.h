@@ -9,6 +9,8 @@
 
 #include <QDataWidgetMapper>
 #include <QDialog>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 
 namespace Ui {
 class MessageDetailsDialog;
@@ -23,15 +25,23 @@ public:
   MessageDetailsDialog(const QModelIndex& _index, QWidget* _parent);
   ~MessageDetailsDialog();
 
+  static const QString IPFS_API_URL;
+
   QModelIndex getCurrentMessageIndex() const;
 
 private:
+  QNetworkAccessManager m_networAccesskManager;
   QScopedPointer<Ui::MessageDetailsDialog> m_ui;
   QDataWidgetMapper m_dataMapper;
+  QString attachmentDirectory;
+  void showUploadProgress(QNetworkReply* reply);
+  void extractAttachment(const QByteArray& data);
 
   Q_SLOT void prevClicked();
   Q_SLOT void nextClicked();
   Q_SLOT void saveClicked();
+  Q_SLOT void downloadClicked();
+  Q_SLOT void attachmentDownloaded(QNetworkReply*  reply);
 };
 
 }
