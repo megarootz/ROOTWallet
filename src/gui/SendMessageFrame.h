@@ -42,7 +42,7 @@ private:
   QList<MessageAddressFrame*> m_addressFrames;
   QNetworkAccessManager networkAccessManager;
 
-  void sendMessage(const QString& ipfsHash);
+  void sendMessage(const QString& ipfsHash, const QString& encrpyptionKey);
   void sendMessageCompleted(CryptoNote::TransactionId _transactionId, bool _error, const QString& _errorText);
   void reset();
   void addAttachments(const QStringList& filenames);
@@ -51,6 +51,7 @@ private:
   void packAttachments(QTemporaryFile* archive);
   void uploadAttachments(QTemporaryFile* archive);
   void showUploadProgress(QNetworkReply* reply);
+  void attachmentUploaded(QNetworkReply *reply,const QString& encryptionKey);
   void packAttachmentsToArchive(const QIODevice *archive);
 
   QString extractAddress(const QString& _addressString) const;
@@ -58,7 +59,6 @@ private:
   Q_SLOT void recalculateFeeValue();
   Q_SLOT void addRecipientClicked();
   Q_SLOT void addAttachmentClicked();
-  Q_SLOT void attachmentUploaded(QNetworkReply *reply);
   Q_SLOT void messageTextChanged();
   Q_SLOT void mixinValueChanged(int _value);
   Q_SLOT void sendClicked();

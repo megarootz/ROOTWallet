@@ -33,6 +33,7 @@ namespace WalletGui {
 Q_DECL_CONSTEXPR quint64 MESSAGE_AMOUNT = 1000;
 Q_DECL_CONSTEXPR quint64 MESSAGE_CHAR_PRICE = 10000;
 Q_DECL_CONSTEXPR quint64 ATTACHMENT_HEADER_LENGTH = 59;
+Q_DECL_CONSTEXPR quint64 ATTACHMENT_ENCRYPTION_KEY_HEADER_LENGTH = 92;
 Q_DECL_CONSTEXPR quint64 MAX_ATTACHMENT_SIZE = 100 * 1024 * 1024;
 Q_DECL_CONSTEXPR quint64 MINIMAL_MESSAGE_FEE = MESSAGE_CHAR_PRICE;
 Q_DECL_CONSTEXPR int DEFAULT_MESSAGE_MIXIN = 2;
@@ -61,8 +62,6 @@ SendMessageFrame::SendMessageFrame(QWidget* _parent) : QFrame(_parent), m_ui(new
   ttlValueChanged(m_ui->m_ttlSlider->value());
   connect(&WalletAdapter::instance(), &WalletAdapter::walletSendMessageCompletedSignal, this, &SendMessageFrame::sendMessageCompleted,
     Qt::QueuedConnection);
-
-  connect(&networkAccessManager, &QNetworkAccessManager::finished, this, &SendMessageFrame::attachmentUploaded);
 
   reset();
 }
@@ -127,6 +126,7 @@ void SendMessageFrame::recalculateFeeValue() {
   // fee for attachment
   if(m_ui->m_attachmentsLayout->count() > 0) {
     fee += MESSAGE_CHAR_PRICE * ATTACHMENT_HEADER_LENGTH;
+    fee += MESSAGE_CHAR_PRICE * ATTACHMENT_ENCRYPTION_KEY_HEADER_LENGTH;
   }
 
   // fee for recepeints
@@ -233,7 +233,7 @@ void SendMessageFrame::sendClicked() {
   }
 
   if(m_ui->m_attachmentsLayout->count() == 0) {
-    sendMessage(QString());
+    sendMessage(QString(), QString());
     return;
   }
 
@@ -302,7 +302,12 @@ void SendMessageFrame::uploadAttachments(QTemporaryFile* archive) {
   attachmentPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"file\"; filename=\"file\""));
   attachmentPart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
   archive->open();
-  attachmentPart.setBodyDevice(archive);
+
+  QByteArray payload = archive->readAll();
+  QByteArray encryptionKey;
+  WalletAdapter::instance().encryptAttachment(payload, encryptionKey);
+  attachmentPart.setBody(payload);
+  QString encryptionKeyStr = encryptionKey.toHex();
 
   multiPart->append(attachmentPart);
   archive->setParent(multiPart);
@@ -311,6 +316,10 @@ void SendMessageFrame::uploadAttachments(QTemporaryFile* archive) {
   QNetworkReply* reply = networkAccessManager.post(request, multiPart);
   reply->setReadBufferSize(MAX_ATTACHMENT_SIZE);
   multiPart->setParent(reply);
+
+  connect(reply, &QNetworkReply::finished, [encryptionKeyStr, this, reply]() {
+    attachmentUploaded(reply, encryptionKeyStr);
+  });
 
   showUploadProgress(reply);
 }
@@ -323,7 +332,7 @@ void SendMessageFrame::showUploadProgress(QNetworkReply* reply) {
   progressDialog->show();
 }
 
-void SendMessageFrame::attachmentUploaded(QNetworkReply *reply) {
+void SendMessageFrame::attachmentUploaded(QNetworkReply* reply, const QString& encryptionKey) {
   reply->deleteLater();
 
   if(reply->error() == QNetworkReply::OperationCanceledError) {
@@ -352,10 +361,10 @@ void SendMessageFrame::attachmentUploaded(QNetworkReply *reply) {
     return;
   }
 
-  sendMessage(hashJsonValue.toString());
+  sendMessage(hashJsonValue.toString(), encryptionKey);
 }
 
-void SendMessageFrame::sendMessage(const QString& ipfsHash) {
+void SendMessageFrame::sendMessage(const QString& ipfsHash, const QString& encrpyptionKey) {
   QVector<CryptoNote::WalletLegacyTransfer> transfers;
   QVector<CryptoNote::TransactionMessage> messages;
 
@@ -363,8 +372,9 @@ void SendMessageFrame::sendMessage(const QString& ipfsHash) {
   if(m_ui->m_addReplyToCheck->isChecked()) {
     header.append(qMakePair(QString(MessagesModel::HEADER_REPLY_TO_KEY), WalletAdapter::instance().getAddress()));
   }
-  if(!ipfsHash.isEmpty()) {
+  if(!ipfsHash.isEmpty() && !encrpyptionKey.isEmpty()) {
     header.append(qMakePair(QString(MessagesModel::HEADER_ATTACHMENT), ipfsHash));
+    header.append(qMakePair(QString(MessagesModel::HEADER_ATTACHMENT_ENCRYPTION_KEY), encrpyptionKey));
   }
   QString messageString = Message::makeTextMessage(m_ui->m_messageTextEdit->toPlainText(), header);
 
@@ -384,6 +394,11 @@ void SendMessageFrame::sendMessage(const QString& ipfsHash) {
   fee -= MESSAGE_AMOUNT * transfers.size();
   if (fee < MINIMAL_MESSAGE_FEE) {
     QCoreApplication::postEvent(&MainWindow::instance(), new ShowMessageEvent(tr("Incorrect fee value"), QtCriticalMsg));
+    return;
+  }
+
+  if(WalletAdapter::instance().getActualBalance() < fee) {
+    QCoreApplication::postEvent(&MainWindow::instance(), new ShowMessageEvent(tr("Insufficient funds"), QtCriticalMsg));
     return;
   }
 

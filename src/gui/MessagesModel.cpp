@@ -25,6 +25,7 @@ const int MESSAGES_MODEL_COLUMN_COUNT =
 
 const QString MessagesModel::HEADER_REPLY_TO_KEY = "Reply-To";
 const QString MessagesModel::HEADER_ATTACHMENT = "Attachment";
+const QString MessagesModel::HEADER_ATTACHMENT_ENCRYPTION_KEY = "Attachment-Encryption-Key";
 
 MessagesModel& MessagesModel::instance() {
   static MessagesModel inst;
@@ -229,6 +230,9 @@ QVariant MessagesModel::getUserRole(const QModelIndex& _index, int _role, Crypto
 
   case ROLE_HEADER_ATTACHMENT:
     return _message.getHeaderValue(HEADER_ATTACHMENT);
+
+  case ROLE_HEADER_ATTACHMENT_ENCRYPTION_KEY:
+    return _message.getHeaderValue(HEADER_ATTACHMENT_ENCRYPTION_KEY);
 
   case ROLE_HASH:
     return QByteArray(reinterpret_cast<char*>(&_transaction.hash), sizeof(_transaction.hash));

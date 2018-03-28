@@ -11,6 +11,8 @@
 #include <QVector>
 
 #include <Common/Base58.h>
+#include <crypto/chacha.h>
+#include <Common/int-util.h>
 #include <Common/Util.h>
 #include <Wallet/WalletErrors.h>
 #include <Wallet/LegacyKeysImporter.h>
@@ -302,6 +304,24 @@ bool WalletAdapter::getAccountKeys(CryptoNote::AccountKeys& _keys) {
   }
 
   return false;
+}
+
+void WalletAdapter::encryptAttachment(QByteArray& attachment, QByteArray& encryptionKey) {
+  for(int i = 0; i < CHACHA_KEY_SIZE; ++i) {
+    encryptionKey.append(Crypto::rand<char>());
+  }
+
+  uint64_t nonce = SWAP64LE(static_cast<int64_t >(attachment.size()));
+  Crypto::chacha(10, attachment.data(), static_cast<size_t >(attachment.size()),
+                 reinterpret_cast<uint8_t *>(encryptionKey.data()), reinterpret_cast<uint8_t *>(&nonce),
+                 attachment.data());
+}
+
+void WalletAdapter::decryptAttachment(QByteArray& attachment, QByteArray& encryptionKey) {
+  uint64_t nonce = SWAP64LE(static_cast<int64_t >(attachment.size()));
+  Crypto::chacha(10, attachment.data(), static_cast<size_t >(attachment.size()),
+                 reinterpret_cast<uint8_t *>(encryptionKey.data()), reinterpret_cast<uint8_t *>(&nonce),
+                 attachment.data());
 }
 
 void WalletAdapter::sendTransaction(const QVector<CryptoNote::WalletLegacyTransfer>& _transfers, quint64 _fee, const QString& _paymentId, quint64 _mixin,

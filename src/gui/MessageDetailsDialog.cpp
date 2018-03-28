@@ -14,6 +14,7 @@
 #include "MainWindow.h"
 #include "MessagesModel.h"
 #include "WalletEvents.h"
+#include "WalletAdapter.h"
 #include "qzipreader_p.h"
 
 #include "ui_messagedetailsdialog.h"
@@ -122,7 +123,12 @@ void MessageDetailsDialog::attachmentDownloaded(QNetworkReply* reply) {
     return;
   }
 
-  extractAttachment(reply->readAll());
+  QByteArray encryptionKey = QByteArray::fromHex(getCurrentMessageIndex().data(MessagesModel::ROLE_HEADER_ATTACHMENT_ENCRYPTION_KEY)
+                                                                         .toString().toUtf8());
+  QByteArray payload = reply->readAll();
+  WalletAdapter::instance().decryptAttachment(payload, encryptionKey);
+
+  extractAttachment(payload);
 }
 
 void MessageDetailsDialog::extractAttachment(const QByteArray& data) {
@@ -155,7 +161,10 @@ void MessageDetailsDialog::extractAttachment(const QByteArray& data) {
       }
   }
 
-  zipReader.extractAll(dir);
+  if(!zipReader.extractAll(dir)) {
+    QCoreApplication::postEvent(&MainWindow::instance(), new ShowMessageEvent(tr("Can't unpack attachment"),
+                                QtCriticalMsg));
+  }
   zipReader.close();
 }
 
