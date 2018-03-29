@@ -10,6 +10,10 @@
 #include <QFrame>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QDrag>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
 
 #include <IWalletLegacy.h>
 

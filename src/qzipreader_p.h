@@ -40,11 +40,6 @@
 #ifndef QZIPREADER_H
 #define QZIPREADER_H
 
-#include <QtGui/qtguiglobal.h>
-#include <QtCore/qglobal.h>
-
-#ifndef QT_NO_TEXTODFWRITER
-
 //
 //  W A R N I N G
 //  -------------
@@ -56,9 +51,9 @@
 // We mean it.
 //
 
-#include <QtCore/qdatetime.h>
-#include <QtCore/qfile.h>
-#include <QtCore/qstring.h>
+#include <QDateTime>
+#include <QFile>
+#include <QString>
 
 QT_BEGIN_NAMESPACE
 
@@ -123,5 +118,4 @@ Q_DECLARE_TYPEINFO(QZipReader::Status, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QT_NO_TEXTODFWRITER
 #endif // QZIPREADER_H

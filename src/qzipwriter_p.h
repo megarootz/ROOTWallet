@@ -39,10 +39,6 @@
 #ifndef QZIPWRITER_H
 #define QZIPWRITER_H
 
-#include <QtGui/qtguiglobal.h>
-
-#ifndef QT_NO_TEXTODFWRITER
-
 //
 //  W A R N I N G
 //  -------------
@@ -54,8 +50,8 @@
 // We mean it.
 //
 
-#include <QtCore/qstring.h>
-#include <QtCore/qfile.h>
+#include <QString>
+#include <QFile>
 
 QT_BEGIN_NAMESPACE
 
@@ -113,5 +109,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QT_NO_TEXTODFWRITER
 #endif // QZIPWRITER_H
