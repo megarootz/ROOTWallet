@@ -13,7 +13,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-#include "qzipwriter_p.h"
+#include "../qzipwriter_p.h"
 
 #include "SendMessageFrame.h"
 #include "CurrencyAdapter.h"

@@ -15,7 +15,7 @@
 #include "MessagesModel.h"
 #include "WalletEvents.h"
 #include "WalletAdapter.h"
-#include "qzipreader_p.h"
+#include "../qzipreader_p.h"
 
 #include "ui_messagedetailsdialog.h"
 
