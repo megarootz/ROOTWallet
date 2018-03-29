@@ -8,6 +8,8 @@
 #pragma once
 
 #include <QFrame>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 
 #include <IWalletLegacy.h>
 
@@ -28,17 +30,35 @@ public:
   ~SendMessageFrame();
 
   void setAddress(const QString& _address);
+  void dragEnterEvent(QDragEnterEvent* event) Q_DECL_OVERRIDE;
+  void dragMoveEvent(QDragMoveEvent* event) Q_DECL_OVERRIDE;
+  void dropEvent(QDropEvent* event) Q_DECL_OVERRIDE;
 
 private:
+  static const QString IPFS_API_URL;
+  static const QString IPFS_RESPONSE_HASH_FIELD;
+
   QScopedPointer<Ui::SendMessageFrame> m_ui;
   QList<MessageAddressFrame*> m_addressFrames;
+  QNetworkAccessManager networkAccessManager;
+
+  void sendMessage(const QString& ipfsHash, const QString& encrpyptionKey);
   void sendMessageCompleted(CryptoNote::TransactionId _transactionId, bool _error, const QString& _errorText);
   void reset();
+  void addAttachments(const QStringList& filenames);
+  qint64 totalAttachmentsSize();
+  bool isAttachmentExist(const QString &filename);
+  void packAttachments(QTemporaryFile* archive);
+  void uploadAttachments(QTemporaryFile* archive);
+  void showUploadProgress(QNetworkReply* reply);
+  void attachmentUploaded(QNetworkReply *reply,const QString& encryptionKey);
+  void packAttachmentsToArchive(const QIODevice *archive);
 
   QString extractAddress(const QString& _addressString) const;
-  void recalculateFeeValue();
 
+  Q_SLOT void recalculateFeeValue();
   Q_SLOT void addRecipientClicked();
+  Q_SLOT void addAttachmentClicked();
   Q_SLOT void messageTextChanged();
   Q_SLOT void mixinValueChanged(int _value);
   Q_SLOT void sendClicked();

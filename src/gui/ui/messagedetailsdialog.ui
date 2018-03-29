@@ -112,6 +112,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="m_downloadButton">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>Download attachment</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -180,8 +190,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>592</x>
-     <y>464</y>
+     <x>89</x>
+     <y>482</y>
     </hint>
     <hint type="destinationlabel">
      <x>352</x>
@@ -212,8 +222,8 @@
    <slot>nextClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>522</x>
-     <y>464</y>
+     <x>608</x>
+     <y>482</y>
     </hint>
     <hint type="destinationlabel">
      <x>352</x>
@@ -237,10 +247,27 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>m_downloadButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MessageDetailsDialog</receiver>
+   <slot>downloadClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>251</x>
+     <y>470</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>352</x>
+     <y>246</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>prevClicked()</slot>
   <slot>nextClicked()</slot>
   <slot>saveClicked()</slot>
+  <slot>downloadClicked()</slot>
  </slots>
 </ui>

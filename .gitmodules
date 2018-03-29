@@ -5,3 +5,6 @@
 	path = libqrencode
 	url = https://github.com/fukuchi/libqrencode.git
 	branch = 3.4
+[submodule "zlib"]
+	path = zlib
+	url = https://github.com/xun-project/zlib
