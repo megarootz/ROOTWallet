@@ -1,7 +1,7 @@
 set(UN_PROJECT_NAME "UltraNoteWallet")
 set(UN_CURRENCY_DISPLAY_NAME "UltraNote")
 set(UN_CURRENCY_TICKER "XUN")
-set(UN_VERSION 1.0.6-beta)
+set(UN_VERSION 1.0.7-beta)
 set(UN_COPYRIGHT "Copyright (c) 2017-2018 UltraNote")
 set(UN_VENDOR "UltraNote Foundation")
 set(UN_IDENTIFIER "org.ultranote.UltraNoteWallet")
