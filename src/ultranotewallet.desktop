@@ -2,7 +2,7 @@
 Encoding=UTF-8
 Name=UltraNote Wallet
 Comment=UltraNote wallet
-Exec=ultranotewallet
+Exec=UltraNoteWallet
 Terminal=false
 Type=Application
 Icon=ultranote
