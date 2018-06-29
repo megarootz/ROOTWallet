@@ -58,7 +58,7 @@ void Settings::load() {
 
   QStringList defaultPoolList;
   //defaultPoolList << "alpha.ultranote.org:5555" << "beta.ultranote.org:5555" << "delta.ultranote.org:5551" << "gamma.ultranote.org:5555";
-defaultPoolList << "alpha.ultranote.org:5555" << "beta.ultranote.org:5555" << "delta.ultranote.org:5551" << "gamma.ultranote.org:5555";
+defaultPoolList << "alpha.ultranote.org:5555" << "alpha.ultranote.org:7777" << "alpha.ultranote.org:8888";
   if (!m_settings.contains(OPTION_MINING_POOLS)) {
     setMiningPoolList(QStringList() << defaultPoolList);
   } else {
