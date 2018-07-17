@@ -1,12 +1,12 @@
-set(UN_PROJECT_NAME "UltraNoteWallet")
-set(UN_CURRENCY_DISPLAY_NAME "UltraNote")
-set(UN_CURRENCY_TICKER "XUN")
+set(UN_PROJECT_NAME "ROOTWallet")
+set(UN_CURRENCY_DISPLAY_NAME "ROOT")
+set(UN_CURRENCY_TICKER "RT")
 set(UN_VERSION 1.0.12-beta)
-set(UN_COPYRIGHT "Copyright (c) 2017-2018 UltraNote")
-set(UN_IDENTIFIER "org.ultranote.UltraNoteWallet")
-set(UN_CONTACT "https://ultranote.org/")
-set(UN_SUMMARY "UltraNote XUN wallet")
-set(UN_DESCRIPTION "UltraNote XUN wallet\
+set(UN_COPYRIGHT "Copyright (c) 2017-2018 ROOT")
+set(UN_IDENTIFIER "org.ROOT.ROOTWallet")
+set(UN_CONTACT "https://ROOT.org/")
+set(UN_SUMMARY "ROOT RT wallet")
+set(UN_DESCRIPTION "ROOT RT wallet\
  UltraNote is a decentralized privacy protected peer-to-peer\
  cryptocurrency and untraceable encrypted messaging system. UltraNote is\
  open-source; its design is public, nobody owns or controls UltraNote and\
